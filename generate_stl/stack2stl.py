@@ -21,7 +21,7 @@ def genBoundaryPoints(im, thin=1):
     X, Y = np.meshgrid(axX, axY)
 
     fig, ax = plt.subplots()
-    C = ax.contour(X, Y, im, levels=[0.5])
+    C = ax.contour(X, Y, im, levels=[0.5*(im.max()+im.min()])
     plt.close()
 
     segs = C.allsegs[0]
