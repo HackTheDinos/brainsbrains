@@ -69,8 +69,10 @@ def genTriangles(bp1, bp2, k):
 
     len1 = np.array([bp.shape[0] for bp in bp1])
     len2 = np.array([bp.shape[0] for bp in bp2])
-    i1 = np.argmax(len1)
-    i2 = np.argmax(len2)
+    ind1 = np.argsort(len1)
+    ind2 = np.argsort(len2)
+    i1 = ind1[-3]
+    i2 = ind2[-3]
 
     BP1 = (2*bp1[i1]).astype(np.int32)
     BP2 = (2*bp2[i2]).astype(np.int32)
@@ -113,7 +115,7 @@ def makeStlStrip(outfile, bp1, bp2, k):
         vb = (tri[2]-tri[0]).astype(np.float)
         vn = np.cross(va, vb)
         norm  = math.sqrt((vn*vn).sum())
-        vn /= norm
+        vn /= -norm
         if norm <= 0.0:
             print "BAD"
             print tri
@@ -158,8 +160,8 @@ if __name__ == "__main__":
         file2 = sys.argv[i+1]
         im1 = loadImage(file1)
         im2 = loadImage(file2)
-        bp1 = genBoundaryPoints(im1, thin=1)
-        bp2 = genBoundaryPoints(im2, thin=1)
+        bp1 = genBoundaryPoints(im1, thin=10)
+        bp2 = genBoundaryPoints(im2, thin=10)
 
         if len(bp1) == 0 or len(bp2) == 0:
             continue
