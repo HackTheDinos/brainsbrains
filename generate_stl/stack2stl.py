@@ -76,8 +76,8 @@ def genTriangles(bp1, bp2, k):
                         ndpointer(ctypes.c_int), ctypes.c_int, ctypes.c_int,
                         ndpointer(ctypes.c_int), ctypes.c_int, ctypes.c_int]
 
-    BP1 = np.ascontiguousarray((2*bp1[0]).astype(np.int32))
-    BP2 = np.ascontiguousarray((2*bp2[0]).astype(np.int32))
+    BP1 = (2*bp1[0]).astype(np.int32)
+    BP2 = (2*bp2[0]).astype(np.int32)
 
     dist = ((BP1[0]-BP2)*(BP1[0]-BP2)).sum(axis=1)
     ind = np.argmin(dist)
@@ -88,11 +88,6 @@ def genTriangles(bp1, bp2, k):
 
     BP1 = BP1.reshape(2*n1)
     BP2 = BP2.reshape(2*n2)
-
-    BPP1 = np.ascontiguousarray(BP1)
-    print BPP1.flags
-    BPP2 = np.ascontiguousarray(BP2)
-    print BPP2.flags
 
     triangles = np.ascontiguousarray(np.zeros((n1+n2)*3*3, dtype=np.int32))
 
@@ -123,7 +118,7 @@ def makeStlStrip(outfile, bp1, bp2, k):
         vn = np.cross(va, vb)
         norm  = math.sqrt((vn*vn).sum())
         vn /= norm
-        if norm <= 0.0 or (tri==0).any() or (tri > 100).any():
+        if norm <= 0.0:
             print "BAD"
             print tri
             continue
