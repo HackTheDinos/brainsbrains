@@ -42,22 +42,13 @@ def genBoundaryPoints(im, thin=1):
         #    line = seg[::thin,:]
         line = seg[::thin,:].copy()
 
-        for i in xrange(line.shape[0]):
-            a = line[i]
-            for j in xrange(i+1, line.shape[0]):
-                b = line[j]
-                if (a==b).all():
-                    print "double"
-                    print i, a
-                    print j, b
-
-
         points.append(line)
 
     return points
 
 def loadImage(filename):
-    im = Image.open(filename)
+    im0 = Image.open(filename)
+    im = im0.convert("L")
     print filename, im.size, im.mode, im.format
     w, h = im.size
     data = im.getdata()
@@ -76,8 +67,13 @@ def genTriangles(bp1, bp2, k):
                         ndpointer(ctypes.c_int), ctypes.c_int, ctypes.c_int,
                         ndpointer(ctypes.c_int), ctypes.c_int, ctypes.c_int]
 
-    BP1 = (2*bp1[0]).astype(np.int32)
-    BP2 = (2*bp2[0]).astype(np.int32)
+    len1 = np.array([bp.shape[0] for bp in bp1])
+    len2 = np.array([bp.shape[0] for bp in bp2])
+    i1 = np.argmax(len1)
+    i2 = np.argmax(len2)
+
+    BP1 = (2*bp1[i1]).astype(np.int32)
+    BP2 = (2*bp2[i2]).astype(np.int32)
 
     dist = ((BP1[0]-BP2)*(BP1[0]-BP2)).sum(axis=1)
     ind = np.argmin(dist)
