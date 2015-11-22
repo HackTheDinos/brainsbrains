@@ -17,26 +17,10 @@ def genBoundaryPoints(im, thin=1):
     axY = np.arange(Ny)
 
     X, Y = np.meshgrid(axX, axY)
-    """
-    print X.shape
-    print Y.shape
-    edges = findEdges(im)
-    X = X[edges]
-    Y = Y[edges]
-
-    print X.shape
-    print Y.shape
-
-    XY = zip(X, Y)
-
-    plt.plot(X, Y)
-    plt.show()
-
-    return XY
-    """
 
     fig, ax = plt.subplots()
     C = ax.contour(X, Y, im, levels=[0.5])
+    plt.close()
 
     segs = C.allsegs[0]
 
@@ -51,44 +35,73 @@ def genBoundaryPoints(im, thin=1):
             #line = np.zeros((seg.shape[0]/int(thin), seg.shape[1]))
             line = seg[::thin,:]
 
-        print line.shape
         points.append(line)
 
     return points
 
+def loadImage(filename):
+    im = Image.open(filename)
+    print filename, im.size, im.mode, im.format
+    w, h = im.size
+    data = im.getdata()
+    arr = np.array(data)
+    arr = arr.reshape((h,w))
+    arr8 = arr.astype(np.uint8)
+
+    return arr8
+
+def genTriangles(bp1, bp2):
+    
+    tri1 = [ [0,0,0],[1,0,0],[0,1,0]]
+    tri2 = [ [0,0,0],[1,0,0],[0,0,1]]
+    tri3 = [ [0,0,0],[0,0,1],[0,1,0]]
+    tri4 = [ [1,0,0],[0,1,0],[0,0,1]]
+
+    return np.array([tri1, tri2, tri3, tri4])
+
+def makeStlStrip(outfile, bp1, bp2):
+    triangles = genTriangles(bp1, bp2)
+
+    f = open(outfile, "a")
+
+    for tri in triangles:
+        f.write("facet normal 0 0 0\n")
+        f.write("    outer loop\n")
+        f.write("        vertex {0:e} {1:e} {2:e}".format(
+                                tri[0,0],tri[0,1],tri[0,2]))
+        f.write("        vertex {0:e} {1:e} {2:e}".format(
+                                tri[1,0],tri[1,1],tri[1,2]))
+        f.write("        vertex {0:e} {1:e} {2:e}".format(
+                                tri[2,0],tri[2,1],tri[2,2]))
+        f.write("    endloop\n")
+        f.write("endfacet")
+    f.close()
+    
+
+def prepStlFile(outfile):
+    f = outfile.open("w")
+    f.write("solid brain\n")
+    f.close()
+
 if __name__ == "__main__":
 
-    N = 100
-    axis = np.arange(N)
-    arr1 = np.zeros((N,N))
-    arr2 = np.zeros((N,N))
+    if len(sys.argv) < 2:
+        print("usage: stack2stl.py [images ...]")
+        print("    Creates .stl file from image stacks.")
+        sys.exit()
 
-    inds1 = ((axis-N/2)**2)[:,None] + ((axis-N/2)**2)[None,:] < (N/3)**2
-    inds2 = ((axis-N/2)**2)[:,None] + ((axis-N/2)**2)[None,:] < (N/3*1.1)**2
-    arr1[inds1] = 1
-    arr2[inds2] = 1
+    outname = "out.stl"
 
-    arr1[10,10] = 1
-    arr1[11,11] = 1
-    arr1[10,11] = 1
-    arr1[9,11] = 1
-    arr1[10,12] = 1
+    prepStlFile(outname)
 
-    plt.imshow(arr1)
-    plt.show()
+    for i in xrange(1, len(sys.argv)-1):
+        file1 = sys.argv[i]
+        file2 = sys.argv[i+1]
+        im1 = loadImage(file1)
+        im2 = loadImage(file2)
+        bp1 = genBoundaryPoints(im1, thin=1)
+        bp2 = genBoundaryPoints(im2, thin=1)
+        makeStlStrip(outname, bp1, bp2)
 
-    edge1 = findEdges(arr1)
 
-    plt.imshow(edge1)
-    plt.show()
-    edge2 = findEdges(arr2)
-    points = genBoundaryPoints(arr1, thin=3)
-    plt.show()
 
-    for line in points:
-        X = line[:,0]
-        Y = line[:,1]
-
-        print line[0], line[-1]
-        plt.plot(X,Y)
-    plt.show()
