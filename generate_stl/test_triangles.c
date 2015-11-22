@@ -12,12 +12,14 @@ int main() {
     int l1[n1][2];
     int l2[n2][2];
 
-    for(int i=0; i<n1; i++) {
+    int i = 0;
+
+    for(i=0; i<n1; i++) {
         l1[i][0] = i;
         l1[i][1] = i*2;
     }
 
-    for(int i=0; i<n2; i++) {
+    for(i=0; i<n2; i++) {
         l2[i][0] = i;
         l2[i][1] = i/2;
     }
@@ -28,7 +30,7 @@ int main() {
     generateTriangles(triangles, l1, n1, 100, l2, n2, 101);
 
     // print results
-    for(int i=0; i<n1+n2; i++) {
+    for(i=0; i<n1+n2; i++) {
         printTriangle(triangles[i]);
     }
 
@@ -36,9 +38,10 @@ int main() {
 }
 
 void printTriangle(int tri[][3]) {
-    for(int i=0; i<3; i++) {
+    int i,j;
+    for(i=0; i<3; i++) {
         printf("[");
-        for(int j=0; j<3; j++) {
+        for(j=0; j<3; j++) {
             printf("%d,", tri[i][j]);
         }
         printf("] ");
