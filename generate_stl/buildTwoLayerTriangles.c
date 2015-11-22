@@ -1,4 +1,5 @@
 #include "buildTwoLayerTriangles.h"
+#include <stdio.h>
 
 void buildTwoLayerTriangles(void * resultsv, void * l1v, int n1, int z1, void * l2v, int n2, int z2) {
     int * l1_flat = (int *) l1v;
@@ -12,8 +13,22 @@ void buildTwoLayerTriangles(void * resultsv, void * l1v, int n1, int z1, void * 
         l1[i][0] = l1_flat[i*2];
         l1[i][1] = l1_flat[i*2+1];
 
+        int j;
+        for(j=0; j<i; j++) {
+            if(l1[i][0] == l1[j][0] && l1[i][1] == l1[j][1]) {
+                printf("duplicate boundary point - l1[%d] and l1[%d] are both (%d, %d)\n", j, i, l1[i][0], l1[i][1]);
+            }
+        }
+
         l2[i][0] = l2_flat[i*2];
         l2[i][1] = l2_flat[i*2+1];
+
+        for(j=0; j<i; j++) {
+            if(l2[i][0] == l2[j][0] && l2[i][1] == l2[j][1]) {
+                printf("duplicate boundary point - l2[%d] and l2[%d] are both (%d, %d)\n", j, i, l2[i][0], l2[i][1]);
+            }
+        }
+
     }
 
     // do triangle generation
@@ -57,35 +72,53 @@ void generateTriangles(int triangles[][3][3], int l1[][2], int n1, int z1, int l
             int d21 = getDist(l2[i2], l1[i1+1]);
 
             if(d12 < d21) {
-               addTriangle(triangles[i1+i2], l1[i1], z1, l2[i2], z2, l2[i2+1], z2);
+               addTriangle(n1, i1, n2, i2, triangles[i1+i2], l1[i1], z1, l2[i2], z2, l2[i2+1], z2);
                i2++;
             } else {
-               addTriangle(triangles[i1+i2], l1[i1], z1, l2[i2], z2, l1[i1+1], z1);
+               addTriangle(n1, i1, n2, i2, triangles[i1+i2], l1[i1], z1, l2[i2], z2, l1[i1+1], z1);
                i1++;
             }
         } else if(i2<n2-1) {
-           addTriangle(triangles[i1+i2], l1[i1], z1, l2[i2], z2, l2[i2+1], z2);
+           addTriangle(n1, i1, n2, i2, triangles[i1+i2], l1[i1], z1, l2[i2], z2, l2[i2+1], z2);
            i2++;
         } else if(i1<n1-1) {
-           addTriangle(triangles[i1+i2], l1[i1], z1, l2[i2], z2, l1[i1+1], z1);
+           addTriangle(n1, i1, n2, i2, triangles[i1+i2], l1[i1], z1, l2[i2], z2, l1[i1+1], z1);
            i1++;
         } else {
             int d12 = getDist(l1[i1], l2[0]);
             int d21 = getDist(l2[i2], l1[0]);
 
             if(d12 < d21) {
-               addTriangle(triangles[i1+i2], l1[i1], z1, l2[i2], z2, l2[0], z2);
-               addTriangle(triangles[i1+i2+1], l1[i1], z1, l2[0], z2, l1[0], z1);
+               addTriangle(n1, i1, n2, i2, triangles[i1+i2], l1[i1], z1, l2[i2], z2, l2[0], z2);
+               addTriangle(n1, i1, n2, i2, triangles[i1+i2+1], l1[i1], z1, l2[0], z2, l1[0], z1);
             } else {
-               addTriangle(triangles[i1+i2], l1[i1], z1, l2[i2], z2, l1[0], z1);
-               addTriangle(triangles[i1+i2+1], l1[0], z1, l2[i2], z2, l2[0], z2);
+               addTriangle(n1, i1, n2, i2, triangles[i1+i2], l1[i1], z1, l2[i2], z2, l1[0], z1);
+               addTriangle(n1, i1, n2, i2, triangles[i1+i2+1], l1[0], z1, l2[i2], z2, l2[0], z2);
             }
             done = 1;
         }
     }
 }
 
-void addTriangle(int triangle[][3], int xy1[2], int z1, int xy2[2], int z2, int xy3[2], int z3) {
+void addTriangle(int n1, int i1, int n2, int i2, int triangle[][3], int xy1[2], int z1, int xy2[2], int z2, int xy3[2], int z3) {
+    int dupvert = 0;
+    int which_unique;
+
+    if((xy1[0] == xy2[0]) && (xy1[1] == xy2[1]) && (z1 == z2))
+        dupvert = 1;
+        which_unique = 3;
+
+    if((xy3[0] == xy2[0]) && (xy3[1] == xy2[1]) && (z3 == z2))
+        dupvert = 1;
+        which_unique = 1;
+
+    if((xy1[0] == xy3[0]) && (xy1[1] == xy3[1]) && (z1 == z3))
+        dupvert = 1;
+        which_unique = 2;
+
+    if(dupvert)
+        printf("duplicate vertex (%d unique) - n1:%d i1:%d n2:%d i2:%d\n", which_unique, n1, i1, n2, i2);
+
     triangle[0][0] = xy1[0];
     triangle[0][1] = xy1[1];
     triangle[0][2] = z1;
@@ -97,9 +130,19 @@ void addTriangle(int triangle[][3], int xy1[2], int z1, int xy2[2], int z2, int 
     triangle[2][0] = xy3[0];
     triangle[2][1] = xy3[1];
     triangle[2][2] = z3;
+
+
+
 }
 
 int getDist(int a[2], int b[2]) {
+    // note: this function returns distance squared, but that's ok for our comparison
+    int dx = a[0] - b[0];
+    int dy = a[1] - b[1];
+    return dx*dx + dy*dy;
+}
+
+int getDist3d(int a[2], int b[2]) {
     // note: this function returns distance squared, but that's ok for our comparison
     int dx = a[0] - b[0];
     int dy = a[1] - b[1];
