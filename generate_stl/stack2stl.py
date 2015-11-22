@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from skimage import feature
+from PIL import Image
 
 def findEdges(im):
 
@@ -11,7 +13,7 @@ def findEdges(im):
 
 def genBoundaryPoints(im, thin=1):
     
-    Nx, Ny = im.shape
+    Ny, Nx = im.shape
 
     axX = np.arange(Nx)
     axY = np.arange(Ny)
@@ -67,20 +69,25 @@ def makeStlStrip(outfile, bp1, bp2):
     for tri in triangles:
         f.write("facet normal 0 0 0\n")
         f.write("    outer loop\n")
-        f.write("        vertex {0:e} {1:e} {2:e}".format(
+        f.write("        vertex {0:e} {1:e} {2:e}\n".format(
                                 tri[0,0],tri[0,1],tri[0,2]))
-        f.write("        vertex {0:e} {1:e} {2:e}".format(
+        f.write("        vertex {0:e} {1:e} {2:e}\n".format(
                                 tri[1,0],tri[1,1],tri[1,2]))
-        f.write("        vertex {0:e} {1:e} {2:e}".format(
+        f.write("        vertex {0:e} {1:e} {2:e}\n".format(
                                 tri[2,0],tri[2,1],tri[2,2]))
         f.write("    endloop\n")
-        f.write("endfacet")
+        f.write("endfacet\n")
     f.close()
     
 
 def prepStlFile(outfile):
-    f = outfile.open("w")
+    f = open(outfile, "w")
     f.write("solid brain\n")
+    f.close()
+
+def finishStlFile(outfile):
+    f = open(outfile, "a")
+    f.write("endsolid brain\n")
     f.close()
 
 if __name__ == "__main__":
@@ -102,6 +109,8 @@ if __name__ == "__main__":
         bp1 = genBoundaryPoints(im1, thin=1)
         bp2 = genBoundaryPoints(im2, thin=1)
         makeStlStrip(outname, bp1, bp2)
+
+    finishStlFile(outname)
 
 
 
