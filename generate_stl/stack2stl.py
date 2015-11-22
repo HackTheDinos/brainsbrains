@@ -62,6 +62,13 @@ def genTriangles(bp1, bp2, k):
     BP1 = (2*bp1[0]).astype(np.int32)
     BP2 = (2*bp2[0]).astype(np.int32)
 
+    dist = ((BP1[0]-BP2)*(BP1[0]-BP2)).sum(axis=1)
+    ind = np.argmin(dist)
+    print ind, BP1[0], BP2[0]
+    BP2 = np.roll(BP2, -ind, axis=0)
+
+    print ind, BP1[0], BP2[0]
+
     n1 = BP1.shape[0]
     n2 = BP2.shape[0]
     triangles = np.zeros((n1+n2,3,3), dtype=np.int32)
