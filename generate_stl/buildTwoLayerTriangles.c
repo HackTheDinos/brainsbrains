@@ -5,8 +5,8 @@ void buildTwoLayerTriangles(void * resultsv, void * l1v, int n1, int z1, void * 
     int * l2_flat = (int *) l2v;
 
     // restructure flat input to a multidimensional array
-    int l1 = [n1][2];
-    int l2 = [n2][2];
+    int l1[n1][2];
+    int l2[n2][2];
     int i;
     for(i=0; i<n1; i++) {
         l1[i][0] = l1_flat[i*2];
@@ -21,7 +21,7 @@ void buildTwoLayerTriangles(void * resultsv, void * l1v, int n1, int z1, void * 
     generateTriangles(triangles, l1, n1, z1, l2, n2, z2);
 
     // flatten multidimensional results array
-    int triangles_flat = (int *) resultsv;
+    int *triangles_flat = (int *) resultsv;
     int j,k;
     for(i=0; i<n1+n2; i++)
         for(j=0; j<3; j++)

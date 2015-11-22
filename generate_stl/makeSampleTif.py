@@ -1,3 +1,4 @@
+import sys
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,5 +24,6 @@ def makeSphereFiles(N=100):
 
 if __name__ == "__main__":
 
-    makeSphereFiles(N=100)
+    N = int(sys.argv[1])
+    makeSphereFiles(N=N)
 

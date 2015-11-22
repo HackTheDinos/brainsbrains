@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import ctypes
 import numpy as np
 import matplotlib.pyplot as plt
 from skimage import feature
@@ -21,7 +22,7 @@ def genBoundaryPoints(im, thin=1):
     X, Y = np.meshgrid(axX, axY)
 
     fig, ax = plt.subplots()
-    C = ax.contour(X, Y, im, levels=[0.5*(im.max()+im.min()])
+    C = ax.contour(X, Y, im, levels=[0.5*(im.max()+im.min())])
     plt.close()
 
     segs = C.allsegs[0]
@@ -52,17 +53,37 @@ def loadImage(filename):
 
     return arr8
 
-def genTriangles(bp1, bp2):
-    
+def genTriangles(bp1, bp2, k):
+
+    #TODO: Make work on Windows
+    lib = ctypes.cdll.LoadLibrary('libtriangle.so')
+    cGenTri = lib.buildTwoLayerTriangles
+
+    BP1 = (2*bp1[0]).astype(np.int32)
+    BP2 = (2*bp2[0]).astype(np.int32)
+
+    n1 = BP1.shape[0]
+    n2 = BP2.shape[0]
+    triangles = np.zeros((n1+n2,3,3), dtype=np.int32)
+
+    cGenTri(    ctypes.c_void_p(triangles.ctypes.data),
+                ctypes.c_void_p(BP1.ctypes.data),
+                n1, k,
+                ctypes.c_void_p(BP2.ctypes.data),
+                n2, k+1)
+
+    """
     tri1 = [ [0,0,0],[1,0,0],[0,1,0]]
     tri2 = [ [0,0,0],[1,0,0],[0,0,1]]
     tri3 = [ [0,0,0],[0,0,1],[0,1,0]]
     tri4 = [ [1,0,0],[0,1,0],[0,0,1]]
 
     return np.array([tri1, tri2, tri3, tri4])
+    """
+    return triangles
 
-def makeStlStrip(outfile, bp1, bp2):
-    triangles = genTriangles(bp1, bp2)
+def makeStlStrip(outfile, bp1, bp2, k):
+    triangles = genTriangles(bp1, bp2, k)
 
     f = open(outfile, "a")
 
@@ -108,7 +129,10 @@ if __name__ == "__main__":
         im2 = loadImage(file2)
         bp1 = genBoundaryPoints(im1, thin=1)
         bp2 = genBoundaryPoints(im2, thin=1)
-        makeStlStrip(outname, bp1, bp2)
+
+        if len(bp1) == 0 or len(bp2) == 0:
+            continue
+        makeStlStrip(outname, bp1, bp2, i)
 
     finishStlFile(outname)
 
