@@ -16,6 +16,8 @@ def loadImArray(filename):
     
     arr8 = arr.astype(np.uint8)
 
+    im.save(".".join(filename.split(".")[:-1]) + ".ppm")
+
     #im.show()
 
     return arr8
