@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage import feature
 from PIL import Image
+from numpy.ctypeslib import ndpointer
 
 def findEdges(im):
 
@@ -71,53 +72,33 @@ def genTriangles(bp1, bp2, k):
     #TODO: Make work on Windows
     lib = ctypes.cdll.LoadLibrary('libtriangle.so')
     cGenTri = lib.buildTwoLayerTriangles
+    cGenTri.argtypes = [ndpointer(ctypes.c_int), 
+                        ndpointer(ctypes.c_int), ctypes.c_int, ctypes.c_int,
+                        ndpointer(ctypes.c_int), ctypes.c_int, ctypes.c_int]
 
-    BP1 = (2*bp1[0]).astype(np.int32)
-    BP2 = (2*bp2[0]).astype(np.int32)
+    BP1 = np.ascontiguousarray((2*bp1[0]).astype(np.int32))
+    BP2 = np.ascontiguousarray((2*bp2[0]).astype(np.int32))
 
     dist = ((BP1[0]-BP2)*(BP1[0]-BP2)).sum(axis=1)
     ind = np.argmin(dist)
-    print ind, BP1[0], BP2[0]
     BP2 = np.roll(BP2, -ind, axis=0)
-
-    print ind, BP1[0], BP2[0]
-
 
     n1 = BP1.shape[0]
     n2 = BP2.shape[0]
 
-    for i in xrange(n1):
-        a = BP1[i]
-        if (a==0).any():
-            print "ZERO IN BP1"
-            print i, a
-        for j in xrange(i+1,n1):
-            b = BP1[j]
-            if (a == b).all():
-                print "DOUBLE in BP1"
-                print i, a
-                print j, b
-    for i in xrange(n2):
-        a = BP2[i]
-        if (a == 0).any():
-            print "ZERO IN BP2"
-            print i, a
-        for j in xrange(i+1,n2):
-            b = BP2[j]
-            if (a == b).all():
-                print "DOUBLE in BP2"
-                print i, a
-                print j, b
-
     BP1 = BP1.reshape(2*n1)
     BP2 = BP2.reshape(2*n2)
-    triangles = np.zeros((n1+n2)*3*3, dtype=np.int32)
 
-    cGenTri(    ctypes.c_void_p(triangles.ctypes.data),
-                ctypes.c_void_p(BP1.ctypes.data),
-                n1, 2*k,
-                ctypes.c_void_p(BP2.ctypes.data),
-                n2, 2*(k+1))
+    BPP1 = np.ascontiguousarray(BP1)
+    print BPP1.flags
+    BPP2 = np.ascontiguousarray(BP2)
+    print BPP2.flags
+
+    triangles = np.ascontiguousarray(np.zeros((n1+n2)*3*3, dtype=np.int32))
+
+    cGenTri(    triangles,
+                np.ascontiguousarray(BP1,dtype=np.int32), n1, 2*k,
+                np.ascontiguousarray(BP2,dtype=np.int32), n2, 2*k+2)
 
     triangles = triangles.reshape((n1+n2,3,3))
 
@@ -142,10 +123,9 @@ def makeStlStrip(outfile, bp1, bp2, k):
         vn = np.cross(va, vb)
         norm  = math.sqrt((vn*vn).sum())
         vn /= norm
-        if norm <= 0.0:
+        if norm <= 0.0 or (tri==0).any() or (tri > 100).any():
             print "BAD"
-            print bp1
-            print bp2
+            print tri
             continue
         f.write("facet normal {0:f} {1:f} {2:f}\n".format(
                                 vn[0], vn[1], vn[2]))
