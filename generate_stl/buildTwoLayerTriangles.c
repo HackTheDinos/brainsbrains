@@ -1,5 +1,36 @@
 void addTriangle(int triangle[][3], int xy1[2], int z1, int xy2[2], int z2, int xy3[2], int z3);
 int getDist(int a[2], int b[2]);
+void generateTriangles(int triangles[][3][3], int l1[][2], int n1, int z1, int l2[][2], int n2, int z2);
+
+void buildTwoLayerTriangles(void * resultsv, void * l1v, int n1, int z1, void * l2v, int n2, int z2) {
+    int * l1_flat = (int *) l1v;
+    int * l2_flat = (int *) l2v;
+
+    // restructure flat input to a multidimensional array
+    int l1 = [n1][2];
+    int l2 = [n2][2];
+    int i;
+    for(i=0; i<n1; i++) {
+        l1[i][0] = l1_flat[i*2];
+        l1[i][1] = l1_flat[i*2+1];
+
+        l2[i][0] = l2_flat[i*2];
+        l2[i][1] = l2_flat[i*2+1];
+    }
+
+    // do triangle generation
+    int triangles[n1+n2][3][3];  // results will go here
+    generateTriangles(triangles, l1, n1, z1, l2, n2, z2);
+
+    // flatten multidimensional results array
+    int triangles_flat = (int *) resultsv;
+    int j,k;
+    for(i=0; i<n1+n2; i++)
+        for(j=0; j<3; j++)
+            for(k=0; k<3; k++)
+                triangles_flat[i*9 + j*3 + k] = triangles[i][j][k];
+
+}
 
 void generateTriangles(int triangles[][3][3], int l1[][2], int n1, int z1, int l2[][2], int n2, int z2) {
     /*
