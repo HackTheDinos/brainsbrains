@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import math
 import ctypes
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,12 +32,24 @@ def genBoundaryPoints(im, thin=1):
 
     for seg in segs:
         print seg.shape
-        if seg.shape[0] % thin == 0:
-            #line = np.zeros((seg.shape[0]/thin-1, seg.shape[1]))
-            line = seg[:-1:thin,:]
-        else:
-            #line = np.zeros((seg.shape[0]/int(thin), seg.shape[1]))
-            line = seg[::thin,:]
+
+        seg = seg[:-1,:]
+
+        #if seg.shape[0] % thin == 0:
+        #    line = seg[:-1:thin,:]
+        #else:
+        #    line = seg[::thin,:]
+        line = seg[::thin,:].copy()
+
+        for i in xrange(line.shape[0]):
+            a = line[i]
+            for j in xrange(i+1, line.shape[0]):
+                b = line[j]
+                if (a==b).all():
+                    print "double"
+                    print i, a
+                    print j, b
+
 
         points.append(line)
 
@@ -69,15 +82,44 @@ def genTriangles(bp1, bp2, k):
 
     print ind, BP1[0], BP2[0]
 
+
     n1 = BP1.shape[0]
     n2 = BP2.shape[0]
-    triangles = np.zeros((n1+n2,3,3), dtype=np.int32)
+
+    for i in xrange(n1):
+        a = BP1[i]
+        if (a==0).any():
+            print "ZERO IN BP1"
+            print i, a
+        for j in xrange(i+1,n1):
+            b = BP1[j]
+            if (a == b).all():
+                print "DOUBLE in BP1"
+                print i, a
+                print j, b
+    for i in xrange(n2):
+        a = BP2[i]
+        if (a == 0).any():
+            print "ZERO IN BP2"
+            print i, a
+        for j in xrange(i+1,n2):
+            b = BP2[j]
+            if (a == b).all():
+                print "DOUBLE in BP2"
+                print i, a
+                print j, b
+
+    BP1 = BP1.reshape(2*n1)
+    BP2 = BP2.reshape(2*n2)
+    triangles = np.zeros((n1+n2)*3*3, dtype=np.int32)
 
     cGenTri(    ctypes.c_void_p(triangles.ctypes.data),
                 ctypes.c_void_p(BP1.ctypes.data),
-                n1, k,
+                n1, 2*k,
                 ctypes.c_void_p(BP2.ctypes.data),
-                n2, k+1)
+                n2, 2*(k+1))
+
+    triangles = triangles.reshape((n1+n2,3,3))
 
     """
     tri1 = [ [0,0,0],[1,0,0],[0,1,0]]
@@ -95,7 +137,18 @@ def makeStlStrip(outfile, bp1, bp2, k):
     f = open(outfile, "a")
 
     for tri in triangles:
-        f.write("facet normal 0 0 0\n")
+        va = (tri[1]-tri[0]).astype(np.float)
+        vb = (tri[2]-tri[0]).astype(np.float)
+        vn = np.cross(va, vb)
+        norm  = math.sqrt((vn*vn).sum())
+        vn /= norm
+        if norm <= 0.0:
+            print "BAD"
+            print bp1
+            print bp2
+            continue
+        f.write("facet normal {0:f} {1:f} {2:f}\n".format(
+                                vn[0], vn[1], vn[2]))
         f.write("    outer loop\n")
         f.write("        vertex {0:e} {1:e} {2:e}\n".format(
                                 tri[0,0],tri[0,1],tri[0,2]))
