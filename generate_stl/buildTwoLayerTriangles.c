@@ -25,6 +25,7 @@ void buildTwoLayerTriangles(void * resultsv, void * l1v, int n1, int z1, void * 
         l2[i][0] = l2_flat[i*2];
         l2[i][1] = l2_flat[i*2+1];
 
+        int j;
         for(j=0; j<i; j++) {
             if(l2[i][0] == l2[j][0] && l2[i][1] == l2[j][1]) {
                 printf("duplicate boundary point - l2[%d] and l2[%d] are both (%d, %d)\n", j, i, l2[i][0], l2[i][1]);
