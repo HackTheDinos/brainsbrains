@@ -1,3 +1,4 @@
+
 all: test_triangles libtriangle.so
 
 default: all
@@ -9,4 +10,4 @@ libtriangle.so: buildTwoLayerTriangles.c
 	gcc -fPIC -shared -o libtriangle.so buildTwoLayerTriangles.c
 
 clean:
-	rm -f $(all)
+	rm -f test_triangles libtriangle.so

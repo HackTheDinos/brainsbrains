@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "buildTwoLayerTriangles.c"
+#include "buildTwoLayerTriangles.h"
 
 void printTriangle(int tri[][3]);
 
