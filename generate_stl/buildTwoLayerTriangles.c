@@ -19,7 +19,9 @@ void buildTwoLayerTriangles(void * resultsv, void * l1v, int n1, int z1, void * 
                 printf("duplicate boundary point - l1[%d] and l1[%d] are both (%d, %d)\n", j, i, l1[i][0], l1[i][1]);
             }
         }
+    }
 
+    for(i=0; i<n2; i++) {
         l2[i][0] = l2_flat[i*2];
         l2[i][1] = l2_flat[i*2+1];
 
@@ -103,21 +105,35 @@ void generateTriangles(int triangles[][3][3], int l1[][2], int n1, int z1, int l
 void addTriangle(int n1, int i1, int n2, int i2, int triangle[][3], int xy1[2], int z1, int xy2[2], int z2, int xy3[2], int z3) {
     int dupvert = 0;
     int which_unique;
+    int dupvalues[3];
 
-    if((xy1[0] == xy2[0]) && (xy1[1] == xy2[1]) && (z1 == z2))
+    if((xy1[0] == xy2[0]) && (xy1[1] == xy2[1]) && (z1 == z2)) {
         dupvert = 1;
         which_unique = 3;
+        dupvalues[0] = xy1[0];
+        dupvalues[1] = xy1[1];
+        dupvalues[2] = z1;
+    }
 
-    if((xy3[0] == xy2[0]) && (xy3[1] == xy2[1]) && (z3 == z2))
+
+    if((xy3[0] == xy2[0]) && (xy3[1] == xy2[1]) && (z3 == z2)) {
         dupvert = 1;
         which_unique = 1;
+        dupvalues[0] = xy3[0];
+        dupvalues[1] = xy3[1];
+        dupvalues[2] = z3;
+    }
 
-    if((xy1[0] == xy3[0]) && (xy1[1] == xy3[1]) && (z1 == z3))
+    if((xy1[0] == xy3[0]) && (xy1[1] == xy3[1]) && (z1 == z3)) {
         dupvert = 1;
         which_unique = 2;
+        dupvalues[0] = xy1[0];
+        dupvalues[1] = xy1[1];
+        dupvalues[2] = z1;
+    }
 
     if(dupvert)
-        printf("duplicate vertex (%d unique) - n1:%d i1:%d n2:%d i2:%d\n", which_unique, n1, i1, n2, i2);
+        printf("duplicate vertex (%d, %d, %d). %d was unique - n1:%d i1:%d n2:%d i2:%d\n", dupvalues[0], dupvalues[1], dupvalues[2], which_unique, n1, i1, n2, i2);
 
     triangle[0][0] = xy1[0];
     triangle[0][1] = xy1[1];
